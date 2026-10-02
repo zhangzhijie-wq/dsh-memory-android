@@ -1,0 +1,4 @@
+# dsha-memory bundle 补丁：把记忆插件挂进 profile 的插件树。
+- insert:
+    - id: dsha-memory
+      name: 'dsh-memory'

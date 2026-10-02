@@ -1,0 +1,27 @@
+{
+  "name": "dsh-memory",
+  "description": "DSHA 长期记忆插件：JSON 文件存储 + MCP 工具 + 系统提示词记忆快照 + 对话页/侧边栏图标编辑器（零原生依赖）。",
+  "version": "0.2.0",
+  "type": "module",
+  "main": "lib/index.js",
+  "exports": {
+    ".": "./lib/index.js",
+    "./client": "./lib/client.js",
+    "./package.json": "./package.json"
+  },
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    },
+    "client": {
+      "platform": "web",
+      "inject": [
+        "@deepseek-ai/dsh-client-ui-slots"
+      ]
+    }
+  },
+  "peerDependencies": {
+    "@deepseek-ai/dsh-mcp-client": "*"
+  },
+  "license": "MIT"
+}

@@ -2,7 +2,7 @@
 
 # dsh-memory —— DSHA 长期记忆插件
 
-> **版本 `0.2.0`** · MIT License · 零原生依赖（纯 Node 内置模块，aarch64 直接可用）
+> **版本 `0.2.1`** · MIT License · 零原生依赖（纯 Node 内置模块，aarch64 直接可用）
 > 适配环境：DSHA App `0.1.7-rc2` · DSH `0.1.7-rc.2` · Node `>= 20`
 
 给 DSHA（DeepSeek Harness on Android）用的长期记忆插件：把值得记住的事存成本地 JSON，
@@ -16,18 +16,40 @@
 - **设置页「记忆插件」**：注册到 `settings.section`，整页做列表 / 搜索 / 增删改
 - **输入框图标**：注册到 `conversation.input.left`，点开是同款面板（Portal 到 body）
 - **网页编辑器**（备用入口）：`GET /memory-editor/editor`
-- **系统提示词快照**：启动时把最近 20 条记忆注入 systemPrompt，模型开箱即「记得」
+- **系统提示词快照（省 token 设计）**：启动时把记忆分层注入 systemPrompt——
+  规则/守则/偏好类（`kind` 为 `rule` 或 `preference`，以及带「红线/守则/铁律/硬规则」
+  标签的条目）**全文加载、永不截断**；其余 `fact`/`note` 只注入**标题**，正文按需
+  用 `memory_search` 检索。详见下文「省 token 设计」。
 - **零原生依赖**：只用 Node 内置模块，无编译、无二进制，arm64 手机可用
 
 ## 安装
 
-1. 把本仓库放到容器内的插件目录（例如 `/root/dsha-memory`）。
+1. 把本仓库放到容器内的插件目录（任意路径，如 `~/dsha-memory`）。
 2. 让依赖可见：把插件的 `node_modules` 软链到 DSH 自带的 `node_modules`。
 3. 在 web profile 的 `package.json` 里：
    - `dependencies` 加 `"dsh-memory": "link:<插件目录>"`
    - `dsh.profile.bundles` 数组加 `"dsh-memory"`
 4. 在 profile 的 `node_modules` 下建软链指向插件目录。
 5. 重启 DSHA Web 生效（profile 目录通常是 `$DSH_HOME/profiles/web`）。
+
+## 省 token 设计
+
+系统提示词每轮都会随请求计费，所以「注入什么、注入多少」直接决定成本。本版做了分层：
+
+| 层级 | 哪些记忆 | 注入方式 | 理由 |
+| --- | --- | --- | --- |
+| 全文层 | `kind` 为 `rule` / `preference`，或标签含「红线/守则/铁律/硬规则」 | **全文**，不截断、不受条数上限约束 | 这类是必须遵守的约束，省掉任何一句都可能被违反 |
+| 标题层 | 其余 `fact` / `note` | 只注入**标题**（优先取 `【…】` 小标题，其次冒号前或第一句，超 60 字截断） | 知道「有这条」通常就够了，细节按需检索 |
+
+配套规则：
+
+- 标题层最多注入最近 20 条，全文层**一条不漏**；
+- 整段有 15000 字符保险阀，正常规模下规则全文不会被裁掉；
+- 需要某条标题对应的完整内容时，模型用 `memory_search` 按关键词检索（带 `limit` 控制条数）。
+
+对比旧版（全量最近 20 条、每条截 180 字、整段 2400 字符封顶）：旧版经常把靠后的
+记忆直接砍掉、规则也可能被截断；新版**约束类记忆完整、事实类记忆瘦身**，在同等
+甚至更小的 prompt 占用下，让「必须遵守的内容」一条不漏。
 
 ## 数据与隐私
 

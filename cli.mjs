@@ -1,16 +1,16 @@
 #!/usr/bin/env node
 /**
  * dsh-memory 终端 CLI：不用开 GUI 也能读写记忆库。
- *   node /root/dsha-memory/cli.mjs list [n]
- *   node /root/dsha-memory/cli.mjs search <关键词…>
- *   node /root/dsha-memory/cli.mjs save <内容> [--tags a,b] [--kind fact|preference|rule|note]
- *   node /root/dsha-memory/cli.mjs forget <id>
- *   node /root/dsha-memory/cli.mjs stats
- * 建议软链：ln -sf /root/dsha-memory/cli.mjs /root/dsh-bin/dsh-memory
+ *   node cli.mjs list [n]
+ *   node cli.mjs search <关键词…>
+ *   node cli.mjs save <内容> [--tags a,b] [--kind fact|preference|rule|note]
+ *   node cli.mjs forget <id>
+ *   node cli.mjs stats
+ * 建议软链：ln -sf "$(pwd)/cli.mjs" ~/dsh-bin/dsh-memory
  */
 import { createRequire } from 'node:module';
 const require = createRequire(import.meta.url);
-const { call, STORE } = require('/root/dsha-memory/lib/server.cjs');
+const { call, STORE } = require('./lib/server.cjs');
 
 const [command, ...rest] = process.argv.slice(2);
 const flags = new Map();

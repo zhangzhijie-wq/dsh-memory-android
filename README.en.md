@@ -2,7 +2,7 @@
 
 # dsh-memory — Long-term memory plugin for DSHA
 
-> **Version `0.2.0`** · MIT License · Zero native dependencies (Node built-ins only, runs on aarch64)
+> **Version `0.2.1`** · MIT License · Zero native dependencies (Node built-ins only, runs on aarch64)
 > Tested with: DSHA App `0.1.7-rc2` · DSH `0.1.7-rc.2` · Node `>= 20`
 
 Long-term memory for DSHA (DeepSeek Harness on Android): memories are stored in a local
@@ -18,15 +18,18 @@ JSON file the model can read and write at any time, with a phone-friendly manage
 - **Composer icon**: registered into `conversation.input.left`; opens the same
   panel as a dialog (portaled to `body`)
 - **Web editor** (fallback): `GET /memory-editor/editor`
-- **System prompt snapshot**: the latest 20 memories are injected into the
-  system prompt at startup, so the model "remembers" out of the box
+- **System prompt snapshot (token-saving design)**: on startup, memories are injected
+  into the system prompt in two tiers — rule/guardrail/preference entries (`kind` is
+  `rule` or `preference`, plus entries tagged 「红线/守则/铁律/硬规则」) are loaded **in full,
+  never truncated**; other `fact`/`note` entries are injected as **titles only**, with
+  full text retrievable via `memory_search` on demand. See "Token-saving design" below.
 - **Zero native dependencies**: Node built-ins only — no build step, no binaries,
   works on arm64 phones
 
 ## Install
 
 1. Put this repository in the plugin directory inside the container
-   (e.g. `/root/dsha-memory`).
+   (any path, e.g. `~/dsha-memory`).
 2. Make dependencies resolvable: symlink the plugin's `node_modules` to the one
    shipped with DSH.
 3. In the web profile's `package.json`:
@@ -34,6 +37,28 @@ JSON file the model can read and write at any time, with a phone-friendly manage
    - add `"dsh-memory"` to the `dsh.profile.bundles` array
 4. Create a symlink under the profile's `node_modules` pointing at the plugin directory.
 5. Restart DSHA Web (the profile directory is usually `$DSH_HOME/profiles/web`).
+
+## Token-saving design
+
+The system prompt is billed with every request, so "what to inject and how much" drives
+cost directly. This version splits memories into tiers:
+
+| Tier | Which memories | Injection | Rationale |
+| --- | --- | --- | --- |
+| Full | `kind` is `rule` / `preference`, or tags contain 「红线/守则/铁律/硬规则」 | **Full text**, no truncation, no count cap | These are binding constraints; dropping any line risks a violation |
+| Title | other `fact` / `note` entries | **Title only** (prefer `【…】` heading, else text before the first colon or first sentence, capped at 60 chars) | Knowing the memory exists is usually enough; details are fetched on demand |
+
+Supporting rules:
+
+- Title tier injects at most the latest 20 entries; the full tier **never drops any rule**;
+- The whole section has a 15000-char safety valve, so rule text is not truncated at normal scale;
+- When the full text behind a title is needed, the model calls `memory_search` with keywords
+  (and `limit` to control the number of hits).
+
+Compared with the previous version (latest 20 entries, each truncated at 180 chars, whole
+section capped at 2400 chars), the old approach often discarded older memories and could
+truncate rules mid-sentence; the new one keeps constraint memories **complete** while
+slimming factual ones, at the same or lower prompt cost.
 
 ## Data & privacy
 

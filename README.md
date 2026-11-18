@@ -2,25 +2,25 @@
 
 # dsh-memory —— DSHA 长期记忆插件
 
-> **版本 `0.2.1`** · MIT License · 零原生依赖（纯 Node 内置模块，aarch64 直接可用）
+> **版本 `0.2.1`** · MIT License · 零原生依赖（纯 Node 内置模块，开箱即用）
 > 适配环境：DSHA App `0.2.1-rc.2` · DSH `0.2.1-rc.2` · Node `>= 20`
 
-给 DSHA（DeepSeek Harness on Android）用的长期记忆插件：把值得记住的事存成本地 JSON，
-模型随时读写，并提供一个手机友好的管理界面。
+让 DSHA 真正拥有长期记忆：跨会话记住你的规则、偏好与事实，**开箱即「记得」**——
+装上之后模型自动带上记忆，随时可读写，并提供手机友好的管理界面，全程零联网、数据不出设备。
 
 ## 特性
 
-- **记忆库**：单个 JSON 文件，原子写入（临时文件 + rename），权限 600
+- **记忆库**：单个 JSON 文件，原子写入（临时文件 + rename），权限 600，稳、快、零依赖
 - **6 个 MCP 工具**：`memory_save` / `memory_search` / `memory_list` /
-  `memory_update` / `memory_forget` / `memory_stats`
-- **设置页「记忆插件」**：注册到 `settings.section`，整页做列表 / 搜索 / 增删改
-- **输入框图标**：注册到 `conversation.input.left`，点开是同款面板（Portal 到 body）
-- **网页编辑器**（备用入口）：`GET /memory-editor/editor`
+  `memory_update` / `memory_forget` / `memory_stats`，模型开箱即用
+- **设置页「记忆插件」**：注册到 `settings.section`，列表 / 搜索 / 增删改，手指点几下搞定
+- **输入框图标**：注册到 `conversation.input.left`，聊天时随手打开同款面板，无缝集成
+- **独立网页编辑器**：`GET /memory-editor/editor`，手机浏览器直开，无需命令行
 - **系统提示词快照（省 token 设计）**：启动时把记忆分层注入 systemPrompt——
   规则/守则/偏好类（`kind` 为 `rule` 或 `preference`，以及带「红线/守则/铁律/硬规则」
   标签的条目）**全文加载、永不截断**；其余 `fact`/`note` 只注入**标题**，正文按需
   用 `memory_search` 检索。详见下文「省 token 设计」。
-- **零原生依赖**：只用 Node 内置模块，无编译、无二进制，arm64 手机可用
+- **开箱即用**：纯 Node 内置模块，无需编译、无需二进制，arm64 手机上直接运行
 
 ## 安装
 
@@ -30,7 +30,7 @@
    - `dependencies` 加 `"dsh-memory": "link:<插件目录>"`
    - `dsh.profile.bundles` 数组加 `"dsh-memory"`
 4. 在 profile 的 `node_modules` 下建软链指向插件目录。
-5. 重启 DSHA Web 生效（profile 目录通常是 `$DSH_HOME/profiles/web`）。
+5. 重启 DSHA Web，立即生效（profile 目录通常是 `$DSH_HOME/profiles/web`）。
 
 ## 省 token 设计
 
@@ -60,14 +60,14 @@
 记忆直接砍掉、规则也可能被截断；新版**约束类记忆完整、事实类记忆瘦身**，在同等
 甚至更小的 prompt 占用下，让「必须遵守的内容」一条不漏。
 
-## 数据与隐私
+## 安全与隐私
 
-- 记忆数据默认写在 `$DSH_HOME/memory/store.json`（可用环境变量 `DSHA_MEMORY_DIR` 覆盖），
-  **不在本仓库内**。
-- 仓库自带的 `.gitignore` 已排除 `store.json`、`node_modules`、`.env` 与日志。
-- 插件只读写本地文件，不向任何网络服务发送数据。
-- 网页编辑接口只接受本机回环请求（Host 必须为 `localhost` / `127.x`），
-  写操作另需本次启动生成的密钥。
+- 记忆数据默认写在 `$DSH_HOME/memory/store.json`（可用环境变量 `DSHA_MEMORY_DIR` 灵活指定），
+  **独立于仓库**，随容器备份、随心随迁。
+- 仓库自带的 `.gitignore` 已排除 `store.json`、`node_modules`、`.env` 与日志，不会误提交敏感数据。
+- **全程本地、零联网**：插件只读写本地文件，不向任何网络服务发送数据，记忆始终留在你的设备里。
+- 网页编辑接口绑定本机回环（Host 限定 `localhost` / `127.x`），写操作另需本次启动生成的
+  一次性密钥——外部访问天然隔绝，多人/跨设备也碰不到你的记忆。
 
 ## 文件
 
@@ -75,8 +75,8 @@
 | --- | --- |
 | `lib/index.js` | 插件入口：MCP 子进程 + 系统提示词 + Web 编辑路由 |
 | `lib/server.cjs` | 记忆服务本体（MCP stdio，JSON-RPC 2.0），也是 CLI / Web API 的库 |
-| `lib/editor.html` | 网页编辑页（手机优先，纯静态，无构建） |
-| `lib/client.js` | 客户端插件：设置页 + 输入框图标（手写 bundle，无构建） |
+| `lib/editor.html` | 网页编辑页（手机优先、响应式，零构建） |
+| `lib/client.js` | 客户端插件：设置页 + 输入框图标（手写 bundle，零构建） |
 | `cli.mjs` | 终端 CLI |
 | `cordis.patch.yml` | 插件树挂载项 |
 
@@ -88,7 +88,7 @@ GET  /memory-editor/api       -> {total, shown, store, memories[]}
 POST /memory-editor/api       头 x-memory-key，体 {action: save|update|forget, ...}
 ```
 
-路由刻意不用 `/plugins/...` 前缀：那是客户端模块系统的保留前缀，会撞车。
+路由刻意避开 `/plugins/...` 前缀：与客户端模块系统的保留前缀分隔开，互不冲突、更稳。
 
 ## CLI
 
@@ -103,7 +103,8 @@ node cli.mjs stats
 ## 卸载
 
 从 profile 的 `dsh.profile.bundles` 里去掉 `dsh-memory`、删掉 `node_modules/dsh-memory`
-软链，重启即可。记忆数据在 `$DSH_HOME/memory/store.json`，卸载插件不会删除它。
+软链，重启即可。记忆数据独立保存在 `$DSH_HOME/memory/store.json`，**卸载完全不影响已有记忆**，
+随时可再装回来继续用。
 
 ## License
 

@@ -2,29 +2,31 @@
 
 # dsh-memory — Long-term memory plugin for DSHA
 
-> **Version `0.2.1`** · MIT License · Zero native dependencies (Node built-ins only, runs on aarch64)
+> **Version `0.2.1`** · MIT License · Zero native dependencies (Node built-ins only, works out of the box)
 > Tested with: DSHA App `0.2.1-rc.2` · DSH `0.2.1-rc.2` · Node `>= 20`
 
-Long-term memory for DSHA (DeepSeek Harness on Android): memories are stored in a local
-JSON file the model can read and write at any time, with a phone-friendly management UI.
+Give DSHA real long-term memory: remember your rules, preferences and facts **across sessions,
+out of the box** — the model instantly "remembers" once installed, with read/write access and a
+phone-friendly management UI. Fully local, zero network, your data never leaves the device.
 
 ## Features
 
-- **Store**: a single JSON file, written atomically (temp file + rename), mode 600
+- **Store**: a single JSON file, written atomically (temp file + rename), mode 600 — fast,
+  robust, zero dependency
 - **6 MCP tools**: `memory_save` / `memory_search` / `memory_list` /
-  `memory_update` / `memory_forget` / `memory_stats`
+  `memory_update` / `memory_forget` / `memory_stats`, ready for the model out of the box
 - **Settings page "Memory"**: registered into `settings.section`; full-page
-  list / search / create / edit / delete
-- **Composer icon**: registered into `conversation.input.left`; opens the same
-  panel as a dialog (portaled to `body`)
-- **Web editor** (fallback): `GET /memory-editor/editor`
+  list / search / create / edit / delete, all at your fingertips
+- **Composer icon**: registered into `conversation.input.left`; opens the same panel
+  right in the chat, seamlessly integrated
+- **Standalone web editor**: `GET /memory-editor/editor`, open in any phone browser — no CLI needed
 - **System prompt snapshot (token-saving design)**: on startup, memories are injected
   into the system prompt in two tiers — rule/guardrail/preference entries (`kind` is
   `rule` or `preference`, plus entries tagged 「红线/守则/铁律/硬规则」) are loaded **in full,
   never truncated**; other `fact`/`note` entries are injected as **titles only**, with
   full text retrievable via `memory_search` on demand. See "Token-saving design" below.
-- **Zero native dependencies**: Node built-ins only — no build step, no binaries,
-  works on arm64 phones
+- **Works out of the box**: Node built-ins only — no build step, no binaries,
+  runs directly on arm64 phones
 
 ## Install
 
@@ -36,7 +38,8 @@ JSON file the model can read and write at any time, with a phone-friendly manage
    - add `"dsh-memory": "link:<plugin-dir>"` to `dependencies`
    - add `"dsh-memory"` to the `dsh.profile.bundles` array
 4. Create a symlink under the profile's `node_modules` pointing at the plugin directory.
-5. Restart DSHA Web (the profile directory is usually `$DSH_HOME/profiles/web`).
+5. Restart DSHA Web and it's live immediately (the profile directory is usually
+   `$DSH_HOME/profiles/web`).
 
 ## Token-saving design
 
@@ -71,14 +74,18 @@ section capped at 2400 chars), the old approach often discarded older memories a
 truncate rules mid-sentence; the new one keeps constraint memories **complete** while
 slimming factual ones, at the same or lower prompt cost.
 
-## Data & privacy
+## Security & privacy
 
-- Memories are stored by default in `$DSH_HOME/memory/store.json`
-  (override with the `DSHA_MEMORY_DIR` environment variable) — **outside this repository**.
-- The bundled `.gitignore` excludes `store.json`, `node_modules`, `.env` and logs.
-- The plugin only reads and writes local files; it sends no data to any network service.
-- The web editor API accepts loopback requests only (Host must be `localhost` / `127.x`),
-  and write operations additionally require a per-launch key.
+- Memories are stored by default in `$DSH_HOME/memory/store.json` (override with the
+  `DSHA_MEMORY_DIR` environment variable) — **kept separate from this repository**, so it
+  backs up and migrates with your container.
+- The bundled `.gitignore` excludes `store.json`, `node_modules`, `.env` and logs, so
+  sensitive data is never committed by mistake.
+- **Fully local, zero network**: the plugin only reads and writes local files and sends
+  nothing to any network service — your memories stay on your device.
+- The web editor API is bound to loopback (Host restricted to `localhost` / `127.x`), and
+  write operations additionally require a one-time per-launch key — external access is
+  locked out by design, and no one else can reach your memories.
 
 ## Files
 
@@ -86,8 +93,8 @@ slimming factual ones, at the same or lower prompt cost.
 | --- | --- |
 | `lib/index.js` | Plugin entry: MCP child process + system prompt + web editor routes |
 | `lib/server.cjs` | Memory service core (MCP stdio, JSON-RPC 2.0); also the CLI / web API library |
-| `lib/editor.html` | Web editor page (mobile-first, static, no build) |
-| `lib/client.js` | Client plugin: settings page + composer icon (hand-written bundle, no build) |
+| `lib/editor.html` | Web editor page (mobile-first, responsive, zero build) |
+| `lib/client.js` | Client plugin: settings page + composer icon (hand-written bundle, zero build) |
 | `cli.mjs` | Command-line interface |
 | `cordis.patch.yml` | Plugin-tree mount entry |
 
@@ -99,8 +106,8 @@ GET  /memory-editor/api       -> {total, shown, store, memories[]}
 POST /memory-editor/api       header x-memory-key, body {action: save|update|forget, ...}
 ```
 
-The routes deliberately avoid the `/plugins/...` prefix, which is reserved by the
-client module system and would collide.
+The routes deliberately keep clear of the `/plugins/...` prefix reserved by the client
+module system — separated, conflict-free, more robust.
 
 ## CLI
 
@@ -115,8 +122,9 @@ node cli.mjs stats
 ## Uninstall
 
 Remove `dsh-memory` from the profile's `dsh.profile.bundles`, delete the
-`node_modules/dsh-memory` symlink and restart. Memories live in
-`$DSH_HOME/memory/store.json` and are not removed by uninstalling the plugin.
+`node_modules/dsh-memory` symlink and restart. Your memories live independently in
+`$DSH_HOME/memory/store.json` and are **fully preserved** — reinstall anytime and pick up
+right where you left off.
 
 ## License
 

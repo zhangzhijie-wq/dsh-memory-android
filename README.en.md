@@ -3,7 +3,7 @@
 # dsh-memory — Long-term memory plugin for DSHA
 
 > **Version `0.2.1`** · MIT License · Zero native dependencies (Node built-ins only, runs on aarch64)
-> Tested with: DSHA App `0.1.7-rc2` · DSH `0.1.7-rc.2` · Node `>= 20`
+> Tested with: DSHA App `0.2.1-rc.2` · DSH `0.2.1-rc.2` · Node `>= 20`
 
 Long-term memory for DSHA (DeepSeek Harness on Android): memories are stored in a local
 JSON file the model can read and write at any time, with a phone-friendly management UI.
@@ -54,6 +54,17 @@ Supporting rules:
 - The whole section has a 15000-char safety valve, so rule text is not truncated at normal scale;
 - When the full text behind a title is needed, the model calls `memory_search` with keywords
   (and `limit` to control the number of hits).
+
+**Building the snapshot once at startup is the core token-saving move.** Re-reading the whole
+store and re-rendering the snapshot on every request means paying for all memories again and
+again; this plugin instead assembles once at startup and pays zero repeatedly for the session:
+
+- The snapshot is built at host startup, keeping prompt usage minimal for the whole session;
+- Memories saved or edited during the session hit the store immediately and are live through
+  `memory_search` / `memory_list` — "hot data" fetched on demand, never occupying the
+  standing context;
+- To promote one into the always-injected prompt, just restart the host once: one restart buys
+  zero repeated cost for the entire session — a very good trade.
 
 Compared with the previous version (latest 20 entries, each truncated at 180 chars, whole
 section capped at 2400 chars), the old approach often discarded older memories and could

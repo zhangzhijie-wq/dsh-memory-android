@@ -8,6 +8,8 @@
 Give DSHA real long-term memory: remember your rules, preferences and facts **across sessions,
 out of the box** — the model instantly "remembers" once installed, with read/write access and a
 phone-friendly management UI. Fully local, zero network, your data never leaves the device.
+A 🧠 **brain icon** also lives at the bottom-left of the chat box: one tap toggles the memory
+panel, with zero learning curve.
 
 ## Features
 
@@ -17,8 +19,11 @@ phone-friendly management UI. Fully local, zero network, your data never leaves 
   `memory_update` / `memory_forget` / `memory_stats`, ready for the model out of the box
 - **Settings page "Memory"**: registered into `settings.section`; full-page
   list / search / create / edit / delete, all at your fingertips
-- **Composer icon**: registered into `conversation.input.left`; opens the same panel
-  right in the chat, seamlessly integrated
+- **Composer brain icon**: a 🧠 "Memory" icon lives at the bottom-left of the chat box —
+  **one tap opens the memory panel** without interrupting your conversation, zero learning
+  curve: no settings page to dig through, no commands to remember. The icon styling carries an
+  inline fallback, so it never degrades into the browser's default grey box even if the
+  stylesheet fails to load — the look stays consistent.
 - **Standalone web editor**: `GET /memory-editor/editor`, open in any phone browser — no CLI needed
 - **System prompt snapshot (token-saving design)**: on startup, memories are injected
   into the system prompt in two tiers — rule/guardrail/preference entries (`kind` is

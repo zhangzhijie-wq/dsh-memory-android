@@ -33,6 +33,9 @@
   .dir .ts { display:flex; flex-wrap:wrap; gap:4px; }
   .dir .t { display:inline-block; padding:2px 6px; border:1px solid var(--line); border-radius:5px; cursor:pointer; font-size:12px; max-width:210px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
   .dir .t:hover { background:var(--accent); color:#fff; border-color:var(--accent); }
+  .dir .t.flash { background:var(--accent); color:#fff; border-color:var(--accent); }
+  .badge.kbadge { cursor:pointer; }
+  .badge.kbadge:hover { background:var(--accent); color:#fff; border-color:var(--accent); }
 </style>
 </head>
 <body>
@@ -124,13 +127,16 @@
       if (!group || !group.length) return;
       var kd = document.createElement("div");
       kd.className = "k";
-      kd.textContent = k + "（" + group.length + "）";
+      kd.id = "dirk-" + k;
+      kd.textContent = k + "（" + group.length + "）▴";
+      kd.title = "回到卡片时点分类标签可弹回这里";
       dir.appendChild(kd);
       var ts = document.createElement("div");
       ts.className = "ts";
       group.slice().reverse().forEach(function (m) {
         var t = document.createElement("span");
         t.className = "t";
+        t.id = "dirt-" + m.id;
         t.textContent = shortTitle(m);
         t.title = m.text;
         t.onclick = function () {
@@ -141,6 +147,18 @@
       });
       dir.appendChild(ts);
     });
+  }
+
+  /** 从卡片弹回上方目录：回到该 kind 分组，并高亮对应标题。 */
+  function backToDir(kind, id) {
+    var group = document.getElementById("dirk-" + kind);
+    var target = group || $("dir");
+    if (target && target.scrollIntoView) target.scrollIntoView({ behavior: "smooth", block: "start" });
+    var t = document.getElementById("dirt-" + id);
+    if (t) {
+      t.classList.add("flash");
+      setTimeout(function () { t.classList.remove("flash"); }, 1400);
+    }
   }
 
   function render() {
@@ -167,7 +185,11 @@
     shown.slice().reverse().forEach(function (m) {
       var card = document.createElement("div"); card.className = "card"; card.id = "card-" + m.id;
       var top = document.createElement("div");
-      var b = document.createElement("span"); b.className = "badge"; b.textContent = m.kind || "note";
+      var b = document.createElement("span");
+      b.className = "badge kbadge";
+      b.textContent = (m.kind || "note") + " ▲";
+      b.title = "弹回 " + (m.kind || "note") + " 目录";
+      b.onclick = function () { backToDir(m.kind || "note", m.id); };
       top.appendChild(b);
       var when = document.createElement("span"); when.className = "dim";
       when.textContent = fmtDate(m.updatedAt || m.createdAt) + (m.updatedAt && m.updatedAt !== m.createdAt ? "（改过）" : "");

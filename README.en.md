@@ -2,7 +2,7 @@
 
 # dsh-memory — Long-term memory plugin for DSHA
 
-> **Version `0.2.1`** · MIT License · Zero native dependencies (Node built-ins only, works out of the box)
+> **Version `0.2.2`** · MIT License · Zero native dependencies (Node built-ins only, works out of the box)
 > Tested with: DSHA App `0.2.1-rc.2` · DSH `0.2.1-rc.2` · Node `>= 20`
 
 Give DSHA real long-term memory: remember your rules, preferences and facts **across sessions,
@@ -26,6 +26,11 @@ of the chat box: one tap toggles the memory panel, with zero learning curve.
   inline fallback, so it never degrades into the browser's default grey box even if the
   stylesheet fails to load — the look stays consistent.
 - **Standalone web editor**: `GET /memory-editor/editor`, open in any phone browser — no CLI needed
+- **Grouped index with one-tap jump**: below the search box, memories are grouped by
+  `rule` / `preference` / `fact` / `note`, each listed with a short title (the leading
+  【…】 heading when present). **Tap a title to smooth-scroll straight to that card** —
+  no more long scrolling no matter how many memories you have. Works in both the web
+  editor and the composer panel.
 - **System prompt snapshot (token-saving design)**: on startup, memories are injected
   into the system prompt in two tiers — rule/guardrail/preference entries (`kind` is
   `rule` or `preference`, plus entries tagged 「红线/守则/铁律/硬规则」) are loaded **in full,
